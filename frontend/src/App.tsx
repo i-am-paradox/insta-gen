@@ -5,7 +5,7 @@ import {
   Clock, Phone, KeyRound, Settings2, ChevronDown, ChevronUp,
   AlertCircle, Eye, EyeOff, ShieldCheck, Zap, Timer, Bug
 } from 'lucide-react'
-import { useSocket, type OTPRequest, type TabStatus } from './useSocket'
+import { useSocket, type TabStatus } from './useSocket'
 
 interface AntiBanState {
   level: 'low' | 'medium' | 'high' | 'paranoid';
@@ -30,55 +30,6 @@ const LEVEL_META: Record<string, { label: string; color: string; bg: string; bor
   high:     { label: 'High',     color: 'text-green-400',  bg: 'bg-green-500/10',  border: 'border-green-500/40',  pct: 80  },
   paranoid: { label: 'Paranoid', color: 'text-[#E1306C]',  bg: 'bg-[#E1306C]/10', border: 'border-[#E1306C]/40',  pct: 100 },
 };
-
-/* ─── OTP Modal ─── */
-function OtpModal({ req, onSubmit, onSkip }: {
-  req: OTPRequest;
-  onSubmit: (id: string, otp: string) => void;
-  onSkip: (id: string) => void;
-}) {
-  const [otp, setOtp] = useState('');
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-[#12121a] border border-[#1e1e2e] rounded-2xl p-6 w-full max-w-sm mx-4 glow-pink">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-full bg-[#E1306C]/20 flex items-center justify-center">
-            <KeyRound className="w-5 h-5 text-[#E1306C]" />
-          </div>
-          <div>
-            <h3 className="text-white font-semibold text-lg">OTP Required</h3>
-            <p className="text-sm text-gray-400">{req.phone}</p>
-          </div>
-        </div>
-        <input
-          type="text"
-          maxLength={8}
-          value={otp}
-          onChange={e => setOtp(e.target.value.replace(/\D/g, ''))}
-          placeholder="Enter OTP code"
-          className="w-full bg-[#0a0a0f] border border-[#1e1e2e] rounded-xl px-4 py-3 text-white text-center text-2xl tracking-[0.3em] font-mono placeholder:text-gray-600 placeholder:text-base placeholder:tracking-normal focus:outline-none focus:border-[#E1306C]/50 mb-4"
-          autoFocus
-          onKeyDown={e => { if (e.key === 'Enter' && otp.length >= 4) onSubmit(req.activation_id, otp); }}
-        />
-        <div className="flex gap-3">
-          <button
-            onClick={() => onSkip(req.activation_id)}
-            className="flex-1 py-2.5 rounded-xl border border-[#1e1e2e] text-gray-400 hover:bg-[#1a1a28] transition-colors cursor-pointer"
-          >
-            Skip
-          </button>
-          <button
-            onClick={() => otp.length >= 4 && onSubmit(req.activation_id, otp)}
-            disabled={otp.length < 4}
-            className="flex-1 py-2.5 rounded-xl bg-[#E1306C] text-white font-semibold hover:bg-[#E1306C]/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-          >
-            Confirm
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 /* ─── Tab Card ─── */
 function TabCard({ tab, onBan }: { tab: TabStatus; onBan: (id: number) => void }) {
@@ -156,7 +107,7 @@ function AccountRow({ acc, idx }: { acc: { username: string; password: string; f
 
 /* ─── Main App ─── */
 export default function App() {
-  const { connected, state, otpRequests, logs, sendOtp } = useSocket();
+  const { connected, state, logs } = useSocket();
 
   // Form state
   const [phones, setPhones] = useState<string[]>([]);
@@ -243,10 +194,6 @@ export default function App() {
     }
   };
 
-  const handleOtpSkip = (id: string) => {
-    sendOtp(id, '000000');
-  };
-
   const [tabsCleared, setTabsCleared] = useState(false);
   const tabs = tabsCleared ? [] : Object.values(state.tabs);
   const progress = state.total > 0 ? ((state.success + state.failed) / state.total * 100) : 0;
@@ -258,11 +205,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0f]">
-      {/* OTP Modals */}
-      {otpRequests.length > 0 && (
-        <OtpModal req={otpRequests[0]} onSubmit={sendOtp} onSkip={handleOtpSkip} />
-      )}
-
       {/* Header */}
       <header className="border-b border-[#1e1e2e] bg-[#12121a]/90 backdrop-blur-md sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
@@ -276,12 +218,6 @@ export default function App() {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            {/* OTP badge */}
-            {otpRequests.length > 0 && (
-              <span className="bg-[#E1306C]/20 text-[#E1306C] text-xs font-bold px-3 py-1.5 rounded-full animate-pulse-ring">
-                {otpRequests.length} OTP Pending
-              </span>
-            )}
             {/* Connection status */}
             <div className={`flex items-center gap-1.5 text-xs ${connected ? 'text-green-400' : 'text-red-400'}`}>
               {connected ? <Wifi className="w-3.5 h-3.5" /> : <WifiOff className="w-3.5 h-3.5" />}

@@ -417,69 +417,36 @@ class ProInstagramCreator:
                     return False
                 # URL changed but no OTP field — might be a different flow, continue anyway
 
+            # ── Step 7: Wait for user to type OTP directly in browser ──
             self._set_status(tab_id, STATUS_OTP_WAIT)
-            logger.info(f"[Tab-{tab_id}] ✅ OTP page detected — waiting for user to enter code in dashboard...")
+            logger.info(f"[Tab-{tab_id}] 📱 OTP page open — waiting for user to enter code in browser (5 min)...")
 
-            otp = await self.sms_provider.get_otp(act_id)  # blocks until dashboard input (5min timeout)
+            # Poll every 2s for up to 5 minutes
+            # Success condition: OTP field disappears (user submitted) OR URL changes
+            otp_done = False
+            for _ in range(150):  # 150 × 2s = 5 minutes
+                try:
+                    field_present = False
+                    for sel in OTP_SELECTORS:
+                        if await page.locator(sel).count() > 0:
+                            field_present = True
+                            break
+                    if not field_present:
+                        otp_done = True
+                        break
+                except Exception:
+                    break
+                await asyncio.sleep(2)
 
-            if not otp:
-                logger.error(f"[Tab-{tab_id}] ❌ OTP timeout after 100s")
-                await self.sms_provider.set_status(act_id, 8)  # Cancel
+            if not otp_done:
+                logger.warning(f"[Tab-{tab_id}] ⏰ OTP wait timed out after 5 min")
                 await self._take_debug_screenshot(page, tab_id, "otp_timeout")
                 return False
 
-            # Fill OTP
-            self._set_status(tab_id, STATUS_OTP_FILL)
-            logger.info(f"[Tab-{tab_id}] 🔢 Filling OTP: {otp}")
-
-            otp_filled = False
-            fill_candidates = (
-                [otp_input_sel] if otp_input_sel else []
-            ) + [
-                "input[autocomplete='one-time-code']",
-                "input[inputmode='numeric']",
-                "input[name='email_confirmation_code']",
-                "input[name='confirmationCode']",
-                "input[name='verificationCode']",
-                "input[aria-label*='ode']",
-                "input[maxlength='6']",
-            ]
-            seen = set()
-            for selector in fill_candidates:
-                if selector in seen:
-                    continue
-                seen.add(selector)
-                try:
-                    el = await page.wait_for_selector(selector, state="visible", timeout=4000)
-                    if el:
-                        await self.human.human_type(page, selector, otp)
-                        otp_filled = True
-                        break
-                except Exception:
-                    continue
-
-            if not otp_filled:
-                logger.error(f"[Tab-{tab_id}] ❌ Could not find OTP input")
-                await self._take_debug_screenshot(page, tab_id, "no_otp_field")
-                return False
-
-            # ── Step 7: Submit OTP ──
-            for btn_text in ["Confirm", "Next", "Submit", "Verify"]:
-                try:
-                    btn = page.get_by_role("button", name=btn_text)
-                    if await btn.is_visible(timeout=3000):
-                        await btn.click()
-                        logger.info(f"[Tab-{tab_id}] 🟢 OTP submitted via '{btn_text}' button")
-                        break
-                except Exception:
-                    continue
-
             # ── Step 8: Count as SUCCESS ──
-            # OTP sent = job done. Account is created on Instagram's side.
             self._set_status(tab_id, STATUS_SUCCESS)
             self._stats["success"] += 1
             logger.info(f"[Tab-{tab_id}] 🎉 OTP submitted for '{username}' — account creation complete!")
-            await self.sms_provider.set_status(act_id, 6)  # Complete
             return True
 
         except Exception as e:
