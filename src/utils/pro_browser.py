@@ -25,16 +25,20 @@ class BrowserManager:
         """Launch the single Camoufox browser instance."""
         logger.info(f"🚀 Launching Camoufox (headless={self.headless}, humanize={self.humanize})")
 
+        # Mobile viewport — iPhone 14 Pro size, easy to record
+        MOBILE_W, MOBILE_H = 390, 844
+
         browser_args = {
             "headless": self.headless,
             "humanize": self.humanize,
+            "screen": {"width": MOBILE_W, "height": MOBILE_H},
         }
         if self.proxy:
             browser_args["proxy"] = self.proxy
 
         self._camoufox = AsyncCamoufox(**browser_args)
         self._browser = await self._camoufox.__aenter__()
-        logger.info("✅ Browser launched successfully")
+        logger.info("✅ Browser launched successfully (mobile 390×844)")
         return self
 
     async def new_tab(self) -> Page:
@@ -42,10 +46,10 @@ class BrowserManager:
         if not self._browser:
             raise RuntimeError("Browser not started. Call start() first.")
 
-        # Camoufox returns either Browser or BrowserContext
-        # Both support new_page()
         page = await self._browser.new_page()
-        logger.debug(f"📄 New tab opened (total: {len(await self.get_all_tabs())})")
+        # Force mobile viewport on every tab
+        await page.set_viewport_size({"width": 390, "height": 844})
+        logger.debug(f"📄 New tab opened 390×844 (total: {len(await self.get_all_tabs())})")
         return page
 
     async def get_all_tabs(self):
