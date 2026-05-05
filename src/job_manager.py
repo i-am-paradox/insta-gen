@@ -68,6 +68,7 @@ class JobManager:
         self.state = JobState()
         self._stop_event = asyncio.Event()
         self._task: Optional[asyncio.Task] = None
+        self._tab_tasks: Dict[int, asyncio.Task] = {}
         self._sms_provider: Optional[ManualOTPProvider] = None
         self._broadcast: Optional[Callable[[dict], Awaitable[None]]] = None
 
@@ -102,6 +103,22 @@ class JobManager:
         """Forward OTP from UI to the ManualOTPProvider."""
         if self._sms_provider:
             return self._sms_provider.submit_otp(activation_id, otp)
+        return False
+
+    async def ban_tab(self, tab_id: int) -> bool:
+        """Cancel a specific tab task and mark it as BANNED."""
+        task = self._tab_tasks.get(tab_id)
+        if task and not task.done():
+            task.cancel()
+        if tab_id in self.state.tabs:
+            self.state.tabs[tab_id].status = "BANNED"
+            self.state.failed += 1
+            await self._emit("TAB_STATUS", {
+                "tab_id": tab_id,
+                **self._tab_dict(self.state.tabs[tab_id]),
+            })
+            logger.info(f"[Tab-{tab_id}] 🚫 Banned by user")
+            return True
         return False
 
     def get_state_snapshot(self) -> dict:
@@ -221,9 +238,11 @@ class JobManager:
                 for i in range(concurrent):
                     if self._stop_event.is_set():
                         break
+                    tab_id = i + 1
                     worker = asyncio.create_task(
-                        self._tab_worker(i + 1, browser, creator, queue, storage, config)
+                        self._tab_worker(tab_id, browser, creator, queue, storage, config)
                     )
+                    self._tab_tasks[tab_id] = worker
                     workers.append(worker)
                     await asyncio.sleep(random.uniform(2, 3))
 

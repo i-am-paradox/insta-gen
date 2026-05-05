@@ -81,7 +81,7 @@ function OtpModal({ req, onSubmit, onSkip }: {
 }
 
 /* ─── Tab Card ─── */
-function TabCard({ tab }: { tab: TabStatus }) {
+function TabCard({ tab, onBan }: { tab: TabStatus; onBan: (id: number) => void }) {
   const statusConfig: Record<string, { color: string; icon: React.ReactNode; label: string }> = {
     IDLE: { color: 'text-gray-500', icon: <Clock className="w-4 h-4" />, label: 'Idle' },
     STARTING: { color: 'text-blue-400', icon: <Loader2 className="w-4 h-4 animate-spin" />, label: 'Starting' },
@@ -94,16 +94,33 @@ function TabCard({ tab }: { tab: TabStatus }) {
     FAILED: { color: 'text-red-400', icon: <XCircle className="w-4 h-4" />, label: 'Failed' },
     ERROR: { color: 'text-red-400', icon: <AlertCircle className="w-4 h-4" />, label: 'Error' },
     COOLDOWN: { color: 'text-cyan-400', icon: <Clock className="w-4 h-4" />, label: 'Cooldown' },
+    BANNED: { color: 'text-gray-500', icon: <XCircle className="w-4 h-4" />, label: 'Banned' },
   };
   const cfg = statusConfig[tab.status] || statusConfig.IDLE;
+  const isBanned = tab.status === 'BANNED';
+  const isDone = ['SUCCESS', 'FAILED', 'ERROR', 'BANNED'].includes(tab.status);
 
   return (
-    <div className={`bg-[#12121a] border rounded-xl p-4 ${tab.status === 'OTP_WAIT' ? 'animate-pulse-ring border-[#E1306C]/40' : 'border-[#1e1e2e]'}`}>
+    <div className={`bg-[#12121a] border rounded-xl p-4 relative group ${
+      tab.status === 'OTP_WAIT' ? 'animate-pulse-ring border-[#E1306C]/40' :
+      isBanned ? 'border-gray-700/40 opacity-50' : 'border-[#1e1e2e]'
+    }`}>
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs font-medium text-gray-500">TAB {tab.tab_id}</span>
-        <span className={`flex items-center gap-1.5 text-xs font-medium ${cfg.color}`}>
-          {cfg.icon} {cfg.label}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className={`flex items-center gap-1.5 text-xs font-medium ${cfg.color}`}>
+            {cfg.icon} {cfg.label}
+          </span>
+          {!isBanned && !isDone && (
+            <button
+              onClick={() => onBan(tab.tab_id)}
+              title="Ban this tab"
+              className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 p-0.5 rounded text-gray-600 hover:text-red-400 hover:bg-red-400/10"
+            >
+              <XCircle className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
       </div>
       {tab.username && <p className="text-sm text-white truncate">@{tab.username}</p>}
       {tab.phone && <p className="text-xs text-gray-500 mt-1 flex items-center gap-1 font-mono"><Phone className="w-3 h-3" />{tab.phone}</p>}
@@ -231,6 +248,11 @@ export default function App() {
 
   const tabs = Object.values(state.tabs);
   const progress = state.total > 0 ? ((state.success + state.failed) / state.total * 100) : 0;
+
+  const banTab = async (tabId: number) => {
+    if (!confirm(`Ban Tab ${tabId}? This will stop its current operation.`)) return;
+    await fetch(`/api/tab/${tabId}/ban`, { method: 'POST' });
+  };
 
   return (
     <div className="min-h-screen bg-[#0a0a0f]">
@@ -448,7 +470,7 @@ export default function App() {
               <Monitor className="w-4 h-4 text-[#E1306C]" /> Live Tabs
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
-              {tabs.map(t => <TabCard key={t.tab_id} tab={t} />)}
+              {tabs.map(t => <TabCard key={t.tab_id} tab={t} onBan={banTab} />)}
             </div>
           </div>
         )}

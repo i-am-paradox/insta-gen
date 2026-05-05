@@ -96,7 +96,7 @@ async def start_job(req: StartJobRequest):
 
         config = JobConfig(
             phone_numbers=phones,
-            concurrent_tabs=min(req.concurrent_tabs, 10),
+            concurrent_tabs=min(req.concurrent_tabs, 100),
             session_limit=min(req.session_limit, 100),
             headless=req.headless,
             enable_warming=req.enable_warming,
@@ -119,6 +119,14 @@ async def start_job(req: StartJobRequest):
 async def stop_job():
     await job_manager.stop_job()
     return {"status": "stopped"}
+
+
+@app.post("/api/tab/{tab_id}/ban")
+async def ban_tab(tab_id: int):
+    success = await job_manager.ban_tab(tab_id)
+    if success:
+        return {"status": "banned", "tab_id": tab_id}
+    return JSONResponse(status_code=404, content={"error": f"Tab {tab_id} not found"})
 
 
 @app.get("/api/status")
