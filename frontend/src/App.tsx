@@ -369,13 +369,13 @@ export default function App() {
                 <span className="text-sm text-white font-mono bg-[#0a0a0f] px-2 py-0.5 rounded">{concurrentTabs}</span>
               </div>
               <input
-                type="range" min={1} max={10} value={concurrentTabs}
+                type="range" min={1} max={100} value={concurrentTabs}
                 onChange={e => setConcurrentTabs(Number(e.target.value))}
                 className="w-full"
                 style={{ accentColor: '#E1306C' }}
                 disabled={state.running}
               />
-              <div className="flex justify-between text-xs text-gray-600 mt-0.5"><span>1</span><span>10</span></div>
+              <div className="flex justify-between text-xs text-gray-600 mt-0.5"><span>1</span><span>100</span></div>
             </div>
 
             {/* Session limit */}
