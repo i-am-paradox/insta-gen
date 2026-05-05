@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+body {
+  margin: 0;
+  background: #0a0a0f;
+  color: #e2e8f0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #0a0a0f; }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #833AB4, #E1306C, #F77737);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glow effects */
+.glow-pink { box-shadow: 0 0 20px rgba(225, 48, 108, 0.2); }
+.glow-green { box-shadow: 0 0 20px rgba(34, 197, 94, 0.15); }
+
+/* Pulse animation for OTP badge */
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(225, 48, 108, 0.5); }
+  70% { box-shadow: 0 0 0 12px rgba(225, 48, 108, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(225, 48, 108, 0); }
+}
+.animate-pulse-ring { animation: pulse-ring 2s infinite; }
+
+/* IG gradient button helper */
+.ig-gradient {
+  background: linear-gradient(135deg, #833AB4, #E1306C, #F77737);
+}

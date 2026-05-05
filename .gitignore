@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+venv/
+.venv/
+env/
+
+# Environment
+.env
+
+# Debug / Output
+debug_screenshots/
+accounts.csv
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Frontend build
+frontend/dist/
+frontend/node_modules/
+
+# Logs
+*.log

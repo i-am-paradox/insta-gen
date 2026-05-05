@@ -1,0 +1,12 @@
+camoufox[zip]
+python-ghost-cursor
+curl_cffi
+python-dotenv
+asyncio
+aiohttp
+playwright
+playwright-stealth
+fastapi
+uvicorn[standard]
+websockets
+python-multipart
