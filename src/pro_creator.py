@@ -380,37 +380,47 @@ class ProInstagramCreator:
             except Exception:
                 logger.debug(f"[Tab-{tab_id}] No separate birthday form (ok)")
 
-            # ── Step 6: OTP Verification ──
-            # Only request OTP if Instagram navigated away from signup or shows OTP input
-            current_url = page.url
-            still_on_signup = "emailsignup" in current_url or "accounts/emailsignup" in current_url
-
-            # Check if OTP input is actually visible
-            otp_visible = False
-            for otp_sel in [
+            # ── Step 6: Wait for OTP page (up to 20 seconds) ──
+            OTP_SELECTORS = [
+                "input[autocomplete='one-time-code']",
+                "input[inputmode='numeric']",
                 "input[name='email_confirmation_code']",
                 "input[name='confirmationCode']",
-                "input[aria-label*='code']",
-                "input[aria-label*='Code']",
-                "input[placeholder*='code']",
+                "input[name='verificationCode']",
+                "input[aria-label*='ode']",
+                "input[placeholder*='ode']",
                 "input[placeholder*='verification']",
-            ]:
-                try:
-                    if await page.locator(otp_sel).count() > 0:
-                        otp_visible = True
-                        break
-                except Exception:
-                    pass
+                "input[maxlength='6']",
+                "input[type='tel'][maxlength='6']",
+            ]
 
-            if still_on_signup and not otp_visible:
-                logger.warning(f"[Tab-{tab_id}] ⚠️  Still on signup page — form may not have submitted correctly")
-                await self._take_debug_screenshot(page, tab_id, "stuck_on_signup")
-                return False
+            logger.info(f"[Tab-{tab_id}] ⏳ Waiting for Instagram OTP page (up to 20s)...")
+            otp_input_sel = None
+            for _ in range(20):
+                for sel in OTP_SELECTORS:
+                    try:
+                        if await page.locator(sel).count() > 0:
+                            otp_input_sel = sel
+                            break
+                    except Exception:
+                        pass
+                if otp_input_sel:
+                    break
+                await asyncio.sleep(1)
+
+            if not otp_input_sel:
+                current_url = page.url
+                logger.warning(f"[Tab-{tab_id}] ⚠️  OTP field not found after 20s. URL: {current_url}")
+                await self._take_debug_screenshot(page, tab_id, "otp_field_missing")
+                if "emailsignup" in current_url:
+                    logger.error(f"[Tab-{tab_id}] ❌ Still on signup — form did not submit")
+                    return False
+                # URL changed but no OTP field — might be a different flow, continue anyway
 
             self._set_status(tab_id, STATUS_OTP_WAIT)
-            logger.info(f"[Tab-{tab_id}] ⏳ Waiting for OTP...")
+            logger.info(f"[Tab-{tab_id}] ✅ OTP page detected — waiting for user to enter code in dashboard...")
 
-            otp = await self.sms_provider.get_otp(act_id)  # blocks until UI input or 5min timeout
+            otp = await self.sms_provider.get_otp(act_id)  # blocks until dashboard input (5min timeout)
 
             if not otp:
                 logger.error(f"[Tab-{tab_id}] ❌ OTP timeout after 100s")
@@ -423,15 +433,24 @@ class ProInstagramCreator:
             logger.info(f"[Tab-{tab_id}] 🔢 Filling OTP: {otp}")
 
             otp_filled = False
-            for selector in [
+            fill_candidates = (
+                [otp_input_sel] if otp_input_sel else []
+            ) + [
+                "input[autocomplete='one-time-code']",
+                "input[inputmode='numeric']",
                 "input[name='email_confirmation_code']",
                 "input[name='confirmationCode']",
-                "input[aria-label*='code']",
-                "input[aria-label*='Code']",
-                "input[placeholder*='code']",
-            ]:
+                "input[name='verificationCode']",
+                "input[aria-label*='ode']",
+                "input[maxlength='6']",
+            ]
+            seen = set()
+            for selector in fill_candidates:
+                if selector in seen:
+                    continue
+                seen.add(selector)
                 try:
-                    el = await page.wait_for_selector(selector, state="visible", timeout=5000)
+                    el = await page.wait_for_selector(selector, state="visible", timeout=4000)
                     if el:
                         await self.human.human_type(page, selector, otp)
                         otp_filled = True

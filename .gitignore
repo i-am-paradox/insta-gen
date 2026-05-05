@@ -16,6 +16,7 @@ env/
 # Debug / Output
 debug_screenshots/
 accounts.csv
+used_phones.txt
 
 # macOS
 .DS_Store

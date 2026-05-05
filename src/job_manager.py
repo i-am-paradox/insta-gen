@@ -11,6 +11,7 @@ from src.providers.sms.manual_provider import ManualOTPProvider
 from src.utils.pro_browser import BrowserManager
 from src.pro_creator import ProInstagramCreator
 from src.utils.storage import AccountStorage
+from src.utils.phone_tracker import PhoneTracker
 
 logger = logging.getLogger("JobManager")
 
@@ -180,6 +181,7 @@ class JobManager:
     async def _run_job(self, config: JobConfig, phones: List[str]):
         """Main job loop — launches browser and workers."""
         storage = AccountStorage("accounts.csv")
+        tracker = PhoneTracker()  # loads used_phones.txt
         creator = ProInstagramCreator(
             self._sms_provider,
             enable_warming=config.enable_warming,
@@ -191,18 +193,27 @@ class JobManager:
             },
         )
 
+        # Filter out already-used numbers
+        fresh_phones = tracker.filter_fresh(phones)
+        if not fresh_phones:
+            logger.warning("⚠️  All provided numbers are already used — nothing to do.")
+            self.state.running = False
+            await self._emit("JOB_COMPLETE", {"success": 0, "failed": 0, "elapsed": 0})
+            return
+
         # Build task queue
         queue = asyncio.Queue()
-        for i, phone in enumerate(phones):
+        for phone in fresh_phones:
             queue.put_nowait({
                 "username": self._generate_username(),
                 "password": self._generate_password(),
                 "full_name": self._generate_fullname(),
                 "phone_override": phone,
+                "_tracker": tracker,  # pass tracker to worker
             })
 
-        concurrent = min(config.concurrent_tabs, len(phones))
-        logger.info(f"📋 {len(phones)} accounts queued, {concurrent} concurrent tabs")
+        concurrent = min(config.concurrent_tabs, len(fresh_phones))
+        logger.info(f"📋 {len(fresh_phones)} fresh accounts queued, {concurrent} concurrent tabs")
 
         try:
             async with BrowserManager(headless=config.headless, humanize=True) as browser:
@@ -268,14 +279,18 @@ class JobManager:
                 if success:
                     tab_info.status = "SUCCESS"
                     self.state.success += 1
+                    phone_used = task.get("phone_override", "")
+                    # Mark number as used so it's never reused in future jobs
+                    if phone_used:
+                        task["_tracker"].mark_used(phone_used)
                     account_record = {
                         "username": task["username"],
                         "password": task["password"],
                         "full_name": task["full_name"],
-                        "phone": task.get("phone_override", ""),
+                        "phone": phone_used,
                         "status": "success",
                     }
-                    task["phone"] = task.get("phone_override", "")
+                    task["phone"] = phone_used
                     task["proxy_server"] = "Direct"
                     storage.save_account(task)
                     self.state.created_accounts.append(account_record)
