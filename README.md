@@ -27,16 +27,31 @@ Professional Instagram account automation with a real-time web dashboard.
 
 ## 🚀 Quick Start
 
-### Step 1 — Setup (run once)
+### 🍎 macOS / Linux
+
+**Step 1 — Setup (run once)**
 ```bash
 bash setup.sh
 ```
-This automatically installs all Python packages, downloads the Camoufox browser, and installs frontend dependencies.
 
-### Step 2 — Start
+**Step 2 — Start**
 ```bash
 bash start.sh
 ```
+
+---
+
+### 🪟 Windows
+
+**Step 1 — Setup (run once)**  
+Double-click `setup.bat`  
+*(or in Command Prompt: `setup.bat`)*
+
+**Step 2 — Start**  
+Double-click `start.bat`  
+*(or in Command Prompt: `start.bat`)*
+
+---
 
 Then open **http://localhost:5173** in your browser.
 

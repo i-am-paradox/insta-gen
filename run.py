@@ -6,9 +6,14 @@ also starts the React frontend dev server.
 import subprocess
 import sys
 import os
+import asyncio
 import webbrowser
 import time
 import signal
+
+# Windows: Playwright requires SelectorEventLoop (not the default ProactorEventLoop)
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 PORT = int(os.getenv("SERVER_PORT", 8000))
 DEV_MODE = os.getenv("DEV_MODE", "false").lower() == "true"
@@ -32,8 +37,9 @@ def main():
         frontend_dir = os.path.join(os.path.dirname(__file__), "frontend")
         if os.path.isdir(frontend_dir):
             print("🔧 Starting React dev server...")
+            npm_cmd = "npm.cmd" if sys.platform == "win32" else "npm"
             frontend_proc = subprocess.Popen(
-                ["npm", "run", "dev"],
+                [npm_cmd, "run", "dev"],
                 cwd=frontend_dir,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
