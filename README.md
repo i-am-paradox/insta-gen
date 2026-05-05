@@ -1,93 +1,78 @@
-# 🚀 Instagram Account Creator PRO
+# 🚀 Instagram Creator PRO
 
-A professional Instagram account automation tool with a real-time web dashboard. Features anti-ban protection, human-like behavior simulation, and concurrent multi-tab creation.
-
----
-
-## 💎 Features
-
-- **Web Dashboard** — Real-time job control, live tab status, OTP input via browser UI
-- **Anti-Ban Engine** — Camoufox (patched Firefox) with randomized hardware fingerprints (Canvas, WebGL, Audio)
-- **Human Behavior** — Ghost-Cursor for natural mouse paths, configurable typing speed (Fast → Paranoid)
-- **Session Warming** — Browses Wikipedia/Google before signup to build browser trust
-- **Concurrent Tabs** — Run up to 10 parallel signup sessions
-- **Anti-Ban Presets** — Low / Medium / High / Paranoid protection levels
-- **Manual OTP Input** — OTP prompt appears in dashboard when Instagram sends verification code
+Professional Instagram account automation with a real-time web dashboard.
 
 ---
 
-## 🛠️ Setup
+## ✨ Features
 
-### Requirements
-- Python 3.10+
-- Node.js 18+
-
-### 1. Install Python dependencies
-```bash
-pip install -r requirements_pro.txt
-python -m camoufox fetch
-```
-
-### 2. Install frontend dependencies
-```bash
-cd frontend
-npm install
-cd ..
-```
-
-### 3. Configure environment
-```bash
-cp .env.example .env
-# Edit .env with your settings (optional — defaults work out of the box)
-```
+| Feature | Details |
+|---|---|
+| **Web Dashboard** | Live tab status, start/stop controls, real-time logs |
+| **Anti-Ban Engine** | Camoufox (patched Firefox) — randomized Canvas, WebGL, Audio fingerprints |
+| **Human Behavior** | Ghost-Cursor mouse paths + configurable typing speed (Fast → Paranoid) |
+| **Session Warming** | Pre-browses Wikipedia/Google to build browser trust before signup |
+| **Concurrent Tabs** | Up to 10 parallel signup sessions |
+| **Anti-Ban Presets** | Low / Medium / High / Paranoid — one click to configure |
+| **Manual OTP** | OTP prompt appears in dashboard UI when Instagram sends verification code |
 
 ---
 
-## ▶️ Run
+## ⚙️ Requirements
 
+- **Python** 3.10 or higher → [python.org](https://python.org)
+- **Node.js** 18 or higher → [nodejs.org](https://nodejs.org)
+
+---
+
+## 🚀 Quick Start
+
+### Step 1 — Setup (run once)
 ```bash
-DEV_MODE=true python3 run.py
+bash setup.sh
+```
+This automatically installs all Python packages, downloads the Camoufox browser, and installs frontend dependencies.
+
+### Step 2 — Start
+```bash
+bash start.sh
 ```
 
-Opens:
-- **Dashboard** → `http://localhost:5173`
-- **API** → `http://localhost:8000`
+Then open **http://localhost:5173** in your browser.
 
 ---
 
 ## 📋 How to Use
 
-1. Open `http://localhost:5173` in your browser
-2. Enter phone numbers (one per line) in the **Phone Numbers** section
-3. Set number of accounts and concurrent tabs
-4. Choose an **Anti-Ban** preset (recommended: High or Paranoid)
-5. Click **Start Job**
-6. Watch live tab status — when OTP is requested, a prompt appears in the dashboard
-7. Enter the OTP received on the phone → account is created
-8. Accounts are saved to `accounts.csv`
+1. **Open** `http://localhost:5173`
+2. **Enter phone numbers** (one per line) in the Phone Numbers box
+3. **Set** number of accounts to create and concurrent tabs
+4. **Choose Anti-Ban preset** — recommended: **High** or **Paranoid**
+5. **Click Start Job**
+6. Watch live tab cards update in real-time
+7. When Instagram sends OTP → a prompt appears in the dashboard → enter the code
+8. ✅ Accounts saved automatically to `accounts.csv`
 
 ---
 
-## 📁 Project Structure
+## 📁 Structure
 
 ```
-├── run.py                  # Entry point (starts backend + frontend)
+├── setup.sh              ← Run once to install everything
+├── start.sh              ← Run to start the tool
+├── run.py                ← Backend entry point
+├── requirements_pro.txt  ← Python dependencies
+├── .env.example          ← Config template
 ├── src/
-│   ├── server.py           # FastAPI backend + WebSocket
-│   ├── job_manager.py      # Job orchestration & concurrency
-│   ├── pro_creator.py      # Instagram signup automation
-│   ├── providers/
-│   │   ├── sms/            # SMS providers (Manual, SMS-Activate)
-│   │   └── proxy/          # Proxy management
-│   └── utils/
-│       ├── human.py        # Human-like delays & mouse movement
-│       └── pro_browser.py  # Camoufox browser launcher
-├── frontend/               # React + TailwindCSS dashboard
-├── requirements_pro.txt
-└── .env.example
+│   ├── server.py         ← FastAPI + WebSocket backend
+│   ├── job_manager.py    ← Job & tab orchestration
+│   ├── pro_creator.py    ← Instagram signup automation
+│   ├── providers/sms/    ← SMS providers (Manual / SMS-Activate)
+│   └── utils/            ← Human engine, browser, storage
+└── frontend/             ← React + TailwindCSS dashboard
 ```
 
 ---
 
 ## ⚠️ Disclaimer
-For educational and research purposes only. Ensure compliance with local laws and platform terms of service.
+For educational and research purposes only. Use responsibly and in compliance with applicable laws and platform terms of service.
