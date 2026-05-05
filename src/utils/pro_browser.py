@@ -25,20 +25,16 @@ class BrowserManager:
         """Launch the single Camoufox browser instance."""
         logger.info(f"🚀 Launching Camoufox (headless={self.headless}, humanize={self.humanize})")
 
-        # Mobile viewport — iPhone 14 Pro size, easy to record
-        MOBILE_W, MOBILE_H = 390, 844
-
         browser_args = {
             "headless": self.headless,
             "humanize": self.humanize,
-            "screen": {"width": MOBILE_W, "height": MOBILE_H},
         }
         if self.proxy:
             browser_args["proxy"] = self.proxy
 
         self._camoufox = AsyncCamoufox(**browser_args)
         self._browser = await self._camoufox.__aenter__()
-        logger.info("✅ Browser launched successfully (mobile 390×844)")
+        logger.info("✅ Browser launched successfully")
         return self
 
     async def new_tab(self) -> Page:
