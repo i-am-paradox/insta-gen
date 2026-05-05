@@ -206,6 +206,7 @@ export default function App() {
 
   const handleStart = async () => {
     if (phones.length === 0 || state.running) return;
+    setTabsCleared(false);
     setStarting(true);
     try {
       await fetch('/api/start', {
@@ -246,7 +247,8 @@ export default function App() {
     sendOtp(id, '000000');
   };
 
-  const tabs = Object.values(state.tabs);
+  const [tabsCleared, setTabsCleared] = useState(false);
+  const tabs = tabsCleared ? [] : Object.values(state.tabs);
   const progress = state.total > 0 ? ((state.success + state.failed) / state.total * 100) : 0;
 
   const banTab = async (tabId: number) => {
@@ -466,8 +468,14 @@ export default function App() {
         {/* ── Live Tabs ── */}
         {tabs.length > 0 && (
           <div>
-            <h2 className="text-white font-semibold mb-3 flex items-center gap-2">
-              <Monitor className="w-4 h-4 text-[#E1306C]" /> Live Tabs
+            <h2 className="text-white font-semibold mb-3 flex items-center justify-between">
+              <span className="flex items-center gap-2"><Monitor className="w-4 h-4 text-[#E1306C]" /> Live Tabs</span>
+              <button
+                onClick={() => setTabsCleared(true)}
+                className="text-xs text-gray-500 hover:text-white flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-[#1e1e2e] transition-colors"
+              >
+                <XCircle className="w-3.5 h-3.5" /> Reset
+              </button>
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
               {tabs.map(t => <TabCard key={t.tab_id} tab={t} onBan={banTab} />)}
