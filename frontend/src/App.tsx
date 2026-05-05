@@ -272,7 +272,7 @@ export default function App() {
             </div>
             <div>
               <h1 className="text-lg font-bold gradient-text">IG Creator PRO</h1>
-              <p className="text-xs text-gray-500">Account Automation Dashboard</p>
+              <p className="text-xs text-gray-500">by <a href="https://github.com/i-am-paradox" target="_blank" rel="noreferrer" className="text-[#E1306C] hover:underline font-medium">@i-am-paradox</a></p>
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -717,8 +717,22 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-[#1e1e2e] py-4 mt-8">
-        <p className="text-center text-xs text-gray-600">Instagram Creator PRO v3.0 &mdash; For authorized use only</p>
+      <footer className="border-t border-[#1e1e2e] py-6 mt-8">
+        <div className="text-center space-y-1">
+          <p className="text-xs text-gray-500">
+            Built by{' '}
+            <a href="https://github.com/i-am-paradox" target="_blank" rel="noreferrer"
+              className="text-[#E1306C] hover:underline font-semibold">
+              @i-am-paradox
+            </a>
+            {' '}·{' '}
+            <a href="https://github.com/i-am-paradox/insta-gen" target="_blank" rel="noreferrer"
+              className="text-gray-400 hover:text-white hover:underline">
+              github.com/i-am-paradox/insta-gen
+            </a>
+          </p>
+          <p className="text-xs text-gray-700">Instagram Creator PRO v3.0 — For authorized use only</p>
+        </div>
       </footer>
     </div>
   );
